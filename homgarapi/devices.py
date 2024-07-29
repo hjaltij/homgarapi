@@ -127,7 +127,7 @@ class HomgarValvePort:
 
     @property
     def remaining_time(self):
-        if self.active:
+        if self.active and self.duration > 0:
             current_timestamp = int(datetime.now().timestamp())
             return self.end_timestamp - current_timestamp
         
@@ -135,7 +135,7 @@ class HomgarValvePort:
     
     @property
     def elapsed_time(self):
-        if self.active:
+        if self.active and self.duration > 0:
             return self.duration - self.remaining_time
         
         return 0
