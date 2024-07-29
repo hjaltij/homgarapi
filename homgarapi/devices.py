@@ -108,8 +108,22 @@ class HomgarValvePort:
         self.id = id
         self.port = port_number
         self.active = active
-        self.end_timestamp = end_timestamp
-        self.duration = duration
+        self._end_timestamp = end_timestamp
+        self._duration = duration
+
+    @property
+    def end_timestamp(self):
+        if self.active:
+            return self._end_timestamp
+        
+        return 0
+    
+    @property
+    def duration(self):
+        if self.active:
+            return self._duration
+    
+        return 0
 
     @property
     def remaining_time(self):
@@ -121,7 +135,7 @@ class HomgarValvePort:
     
     @property
     def elapsed_time(self):
-        if self.duration > 0:
+        if self.active:
             return self.duration - self.remaining_time
         
         return 0
