@@ -99,7 +99,7 @@ class HomgarApi:
         This function returns a list of hubs associated with the home. Each hub contains associated
         subdevices that use the hub as gateway.
         :param hid: The home ID to retrieve hubs and associated subdevices for
-        :return: List of hubs with associated subdevicse
+        :return: List of hubs with associated subdevices
         """
         data = self._get_json("/app/device/getDeviceByHid", params={"hid": str(hid)})
         hubs = []
@@ -108,6 +108,10 @@ class HomgarApi:
             return dict(
                 model=dev_data.get('model'),
                 model_code=dev_data.get('modelCode'),
+                mac=dev_data.get('mac'),
+                deviceName=dev_data.get('deviceName'),
+                productKey=dev_data.get('productKey'),
+                enabled=dev_data.get('enabled'),
                 name=dev_data.get('name'),
                 did=dev_data.get('did'),
                 mid=dev_data.get('mid'),
@@ -133,6 +137,7 @@ class HomgarApi:
                 subdevice_class = get_device_class(subdevice_data)
                 if subdevice_class is None:
                     continue
+
                 subdevices.append(subdevice_class(**device_base_props(subdevice_data)))
 
             hub_class = get_device_class(hub_data)
@@ -145,8 +150,19 @@ class HomgarApi:
             ))
 
         return hubs
+    
+    def set_device_status(self, hub: HomgarHubDevice, payload: dict) -> str:
+        return self._post_json("/app/device/controlWorkMode", body=payload)
+    
+    def start_irrigation(self, hub: HomgarHubDevice, port: int, duration: int) -> str:
+        params = {"addr": 1, "deviceName": hub.deviceName, "duration": duration, "mid": hub.mid, "mode": 1, "param": "", "port": port, "productKey": hub.productKey}
+        return self.set_device_status(hub = hub, payload = params)
+    
+    def stop_irrigation(self, hub: HomgarHubDevice, port: int) -> str:
+        params = {"addr": 1, "deviceName": hub.deviceName, "mid": hub.mid, "mode": 0, "param": "", "port": port, "productKey": hub.productKey}
+        return self.set_device_status(hub = hub, payload = params)
 
-    def get_device_status(self, hub: HomgarHubDevice) -> None:
+    def get_device_status(self, hub: HomgarHubDevice) -> []:
         """
         Updates the device status of all subdevices associated with the given hub device.
         :param hub: The hub to update
@@ -154,10 +170,15 @@ class HomgarApi:
         data = self._get_json("/app/device/getDeviceStatus", params={"mid": str(hub.mid)})
         id_map = {status_id: device for device in [hub, *hub.subdevices] for status_id in device.get_device_status_ids()}
 
+        status = []
+
         for subdevice_status in data['subDeviceStatus']:
             device = id_map.get(subdevice_status['id'])
             if device is not None:
-                device.set_device_status(subdevice_status)
+                s = device.set_device_status(subdevice_status)
+                status.append(s)
+        
+        return status
 
     def ensure_logged_in(self, email: str, password: str, area_code: str = "31") -> None:
         """

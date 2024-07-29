@@ -6,7 +6,7 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-version = os.environ['GITHUB_REF_NAME']
+version = os.environ.get('GITHUB_REF_NAME', '0.0.3')
 
 setup(
     name='homgarapi',
@@ -15,9 +15,9 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     keywords=['homgar'],
-    url='https://github.com/Remboooo/homgarapi',
-    download_url=f"https://github.com/Remboooo/homgarapi/archive/refs/tags/{version}.tar.gz",
-    author='Rembrand van Lakwijk',
+    url='https://github.com/hjaltij/homgarapi',
+    download_url=f"https://github.com/hjaltij/homgarapi/archive/refs/tags/{version}.tar.gz",
+    author='Rembrand van Lakwijk & Hjalti Jakobsson',
     author_email='rem@lakwijk.com',
     license='MIT',
     packages=['homgarapi'],

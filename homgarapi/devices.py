@@ -1,5 +1,6 @@
 import re
 from typing import List
+from datetime import datetime
 
 STATS_VALUE_REGEX = re.compile(r'^(\d+)\((\d+)/(\d+)/(\d+)\)')
 
@@ -33,10 +34,13 @@ class HomgarDevice:
 
     FRIENDLY_DESC = "Unknown HomGar device"
 
-    def __init__(self, model, model_code, name, did, mid, alerts, **kwargs):
+    def __init__(self, model, model_code, name, did, mid, alerts, deviceName, mac, productKey, **kwargs):
         self.model = model
         self.model_code = model_code
         self.name = name
+        self.deviceName = deviceName
+        self.mac = mac
+        self.productKey = productKey
         self.did = did  # the unique device identifier of this device itself
         self.mid = mid  # the unique identifier of the sensor network
         self.alerts = alerts
@@ -99,6 +103,30 @@ class HomgarDevice:
         """
         raise NotImplementedError()
 
+class HomgarValvePort:
+    def __init__(self, port_number, active, end_timestamp, duration):
+        self.port = port_number
+        self.active = active
+        self.end_timestamp = end_timestamp
+        self.duration = duration
+
+    def remaining_time(self):
+        if self.active:
+            current_timestamp = int(datetime.now().timestamp())
+            return self.end_timestamp - current_timestamp
+        
+        return 0
+    
+    def elapsed_time(self):
+        if self.duration > 0:
+            self.duration - self.remaining_time()
+        
+        return 0
+
+    def __str__(self):
+        status = "Active" if self.active else "Inactive"
+        return (f"HomgarValvePort port = {self.port}, status = {status}, "
+                f"remaining_time = {self.remaining_time()} seconds, elapsed_time = {self.elapsed_time()} seconds, duration = {self.duration})")
 
 class HomgarHubDevice(HomgarDevice):
     """
@@ -126,6 +154,7 @@ class HomgarSubDevice(HomgarDevice):
         super().__init__(**kwargs)
         self.address = address  # device address within the sensor network
         self.port_number = port_number  # the number of ports on the device, e.g. 2 for the 2-zone water timer
+        self.valve_ports = []
 
     def __str__(self):
         return f"{super().__str__()} at address {self.address}"
@@ -136,6 +165,42 @@ class HomgarSubDevice(HomgarDevice):
     def _parse_device_specific_status_d_value(self, s):
         pass
 
+class RainPointMiniHub(HomgarHubDevice):
+    MODEL_CODES = [273]
+    FRIENDLY_DESC = "Irrigation Mini Hub"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.wifi_rssi = None
+        self.battery_state = None
+        self.connected = None
+    
+    def get_device_status_ids(self):
+        return ["connected", "state", "D01"]
+
+    def set_device_status(self, api_obj):
+        dev_id = api_obj['id']
+        val = api_obj['value']
+        if dev_id == "state":
+            self.battery_state, self.wifi_rssi = [int(s) for s in val.split(',')]
+        elif dev_id == "connected":
+            self.connected = int(val) == 1
+        else:
+            super().set_device_status(api_obj)
+
+    def _parse_device_specific_status_d_value(self, s):
+        """
+        Observed example value:
+        781(781/723/1),52(64/50/1),P=10213(10222/10205/1),
+
+        Deduced meaning:
+        temp[.1F](day-max/day-min/trend?),humidity[%](day-max/day-min/trend?),P=pressure[Pa](day-max/day-min/trend?),
+        """
+
+        print(s)
+
+    def __str__(self):
+        return super().__str__()
 
 class RainPointDisplayHub(HomgarHubDevice):
     MODEL_CODES = [264]
@@ -298,14 +363,38 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
         What we know so far:
         left/right zone separated by '|' character
         fields for each zone: ?,last-usage[.1l],?,?,?,?
-        """
-        pass
 
+        For Water valves here's what I've figured out. Given the following state:
+        '33,0,0,1722206816,480,0|0,0,0,0,0,0'
+
+        33 means that valve is running irregation. 34 means it's running mist program
+        1722206816 is when it was opened
+        480 is the number of seconds it was programmed to stay open
+        """
+        
+        valve_zones = s.split('|')
+        valve_ports = []
+
+        for index, section in enumerate(valve_zones):
+            # Split the valve state by ',' to get individual values
+            values = section.split(',')
+            port_number = index+1
+            
+            # Extract the known values
+            active = values[0] == '33' or values[0] == '34'
+            end_timestamp = int(values[3])
+            duration = int(values[4])
+
+            valve_port = HomgarValvePort(port_number = port_number, active = active, end_timestamp = end_timestamp, duration = duration)
+            valve_ports.append(valve_port)
+
+        self.valve_ports = valve_ports
 
 MODEL_CODE_MAPPING = {
     code: clazz
     for clazz in (
         RainPointDisplayHub,
+        RainPointMiniHub,
         RainPointSoilMoistureSensor,
         RainPointRainSensor,
         RainPointAirSensor,
