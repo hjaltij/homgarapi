@@ -111,6 +111,7 @@ class HomgarValvePort:
         self.end_timestamp = end_timestamp
         self.duration = duration
 
+    @property
     def remaining_time(self):
         if self.active:
             current_timestamp = int(datetime.now().timestamp())
@@ -118,16 +119,17 @@ class HomgarValvePort:
         
         return 0
     
+    @property
     def elapsed_time(self):
         if self.duration > 0:
-            return self.duration - self.remaining_time()
+            return self.duration - self.remaining_time
         
         return 0
 
     def __str__(self):
         status = "Active" if self.active else "Inactive"
         return (f"HomgarValvePort port = {self.port}, status = {status}, "
-                f"remaining_time = {self.remaining_time()} seconds, elapsed_time = {self.elapsed_time()} seconds, duration = {self.duration})")
+                f"remaining_time = {self.remaining_time} seconds, elapsed_time = {self.elapsed_time} seconds, duration = {self.duration})")
 
 class HomgarHubDevice(HomgarDevice):
     """
