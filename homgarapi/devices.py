@@ -104,7 +104,8 @@ class HomgarDevice:
         raise NotImplementedError()
 
 class HomgarValvePort:
-    def __init__(self, port_number, active, end_timestamp, duration):
+    def __init__(self, id, port_number, active, end_timestamp, duration):
+        self.id = id
         self.port = port_number
         self.active = active
         self.end_timestamp = end_timestamp
@@ -384,8 +385,9 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
             active = values[0] == '33' or values[0] == '34'
             end_timestamp = int(values[3])
             duration = int(values[4])
+            id = f"{self.did}-{port_number}"
 
-            valve_port = HomgarValvePort(port_number = port_number, active = active, end_timestamp = end_timestamp, duration = duration)
+            valve_port = HomgarValvePort(id = id, port_number = port_number, active = active, end_timestamp = end_timestamp, duration = duration)
             valve_ports.append(valve_port)
 
         self.valve_ports = valve_ports
