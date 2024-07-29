@@ -120,7 +120,7 @@ class HomgarValvePort:
     
     def elapsed_time(self):
         if self.duration > 0:
-            self.duration - self.remaining_time()
+            return self.duration - self.remaining_time()
         
         return 0
 
