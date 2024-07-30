@@ -119,6 +119,7 @@ class HomgarApi:
                 address=dev_data.get('addr'),
                 port_number=dev_data.get('portNumber'),
                 alerts=dev_data.get('alerts'),
+                hid=str(hid),
             )
 
         def get_device_class(dev_data):
@@ -153,7 +154,7 @@ class HomgarApi:
         return hubs
     
     def set_device_status(self, hub: HomgarHubDevice, payload: dict) -> str:
-        return self._post_json("/app/device/controlWorkMode", body=payload)
+        return self._post_json("/app/device/controlWorkMode", body=payload, headers={"hid": hub.hid, "sceneType": "1"})
     
     def start_irrigation(self, hub: HomgarHubDevice, port: int, duration: int) -> str:
         params = {"addr": 1, "deviceName": hub.deviceName, "duration": duration, "mid": hub.mid, "mode": 1, "param": "", "port": port, "productKey": hub.productKey}

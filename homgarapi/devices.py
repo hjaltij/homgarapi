@@ -34,13 +34,14 @@ class HomgarDevice:
 
     FRIENDLY_DESC = "Unknown HomGar device"
 
-    def __init__(self, model, model_code, name, did, mid, alerts, deviceName, mac, productKey, softwareVersion, **kwargs):
+    def __init__(self, model, model_code, name, did, mid, alerts, deviceName, mac, productKey, softwareVersion, hid, **kwargs):
         self.model = model
         self.model_code = model_code
         self.name = name
         self.deviceName = deviceName
         self.mac = mac
         self.productKey = productKey
+        self.hid = hid
         self.softwareVersion = softwareVersion
         self.did = did  # the unique device identifier of this device itself
         self.mid = mid  # the unique identifier of the sensor network
