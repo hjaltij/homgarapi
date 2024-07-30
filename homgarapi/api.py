@@ -109,6 +109,7 @@ class HomgarApi:
                 model=dev_data.get('model'),
                 model_code=dev_data.get('modelCode'),
                 mac=dev_data.get('mac'),
+                softwareVersion=dev_data.get('softVer'),
                 deviceName=dev_data.get('deviceName'),
                 productKey=dev_data.get('productKey'),
                 enabled=dev_data.get('enabled'),

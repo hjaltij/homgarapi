@@ -34,13 +34,14 @@ class HomgarDevice:
 
     FRIENDLY_DESC = "Unknown HomGar device"
 
-    def __init__(self, model, model_code, name, did, mid, alerts, deviceName, mac, productKey, **kwargs):
+    def __init__(self, model, model_code, name, did, mid, alerts, deviceName, mac, productKey, softwareVersion, **kwargs):
         self.model = model
         self.model_code = model_code
         self.name = name
         self.deviceName = deviceName
         self.mac = mac
         self.productKey = productKey
+        self.softwareVersion = softwareVersion
         self.did = did  # the unique device identifier of this device itself
         self.mid = mid  # the unique identifier of the sensor network
         self.alerts = alerts
@@ -174,7 +175,7 @@ class HomgarSubDevice(HomgarDevice):
         self.valve_ports = []
 
     def __str__(self):
-        return f"{super().__str__()} at address {self.address}"
+        return f"{super().__str__()} at address {self.address} ({self.softwareVersion})"
 
     def get_device_status_ids(self):
         return [f"D{self.address:02d}"]
@@ -217,8 +218,8 @@ class RainPointMiniHub(HomgarHubDevice):
         print(s)
 
     def __str__(self):
-        return super().__str__()
-
+        return super().__str__() + f" s: ({self.softwareVersion})"
+    
 class RainPointDisplayHub(HomgarHubDevice):
     MODEL_CODES = [264]
     FRIENDLY_DESC = "Irrigation Display Hub"
