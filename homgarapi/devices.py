@@ -384,7 +384,9 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
         For Water valves here's what I've figured out. Given the following state:
         '33,0,0,1722206816,480,0|0,0,0,0,0,0'
 
-        33 means that valve is running irregation. 34 means it's running mist program
+        33 means that valve is running irregation.
+        34 means it's running mist program.
+        17 means the valve was manually opened using the physical button ont he device
         1722206816 is when it was opened
         480 is the number of seconds it was programmed to stay open
         """
@@ -398,7 +400,7 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
             port_number = index+1
             
             # Extract the known values
-            active = values[0] == '33' or values[0] == '34'
+            active = values[0] in ['33', '34', '17']
             end_timestamp = int(values[3])
             duration = int(values[4])
             id = f"{self.did}-{port_number}"
