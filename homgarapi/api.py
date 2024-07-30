@@ -161,7 +161,7 @@ class HomgarApi:
         return self.set_device_status(hub = hub, payload = params)
     
     def stop_irrigation(self, hub: HomgarHubDevice, port: int) -> str:
-        params = {"addr": 1, "deviceName": hub.deviceName, "mid": hub.mid, "mode": 0, "param": "", "port": port, "productKey": hub.productKey}
+        params = {"addr": 1, "deviceName": hub.deviceName,  "duration": 0, "mid": hub.mid, "mode": 0, "param": "", "port": port, "productKey": hub.productKey}
         return self.set_device_status(hub = hub, payload = params)
 
     def get_device_status(self, hub: HomgarHubDevice) -> []:
