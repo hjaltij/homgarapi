@@ -106,9 +106,10 @@ class HomgarDevice:
         raise NotImplementedError()
 
 class HomgarValvePort:
-    def __init__(self, id, port_number, active, end_timestamp, duration):
+    def __init__(self, id, port_number, active, last_water_usage, end_timestamp, duration):
         self.id = id
         self.port = port_number
+        self.last_water_usage = last_water_usage
         self.active = active
         self._end_timestamp = end_timestamp
         self._duration = duration
@@ -143,9 +144,9 @@ class HomgarValvePort:
         return 0
 
     def __str__(self):
-        status = "Active" if self.active else "Inactive"
-        return (f"HomgarValvePort port = {self.port}, status = {status}, "
-                f"remaining_time = {self.remaining_time} seconds, elapsed_time = {self.elapsed_time} seconds, duration = {self.duration})")
+        status = "active" if self.active else "inactive"
+        return (f"HomgarValvePort | port = {self.port}, status = {status}, "
+                f"remaining_time = {self.remaining_time} seconds, elapsed_time = {self.elapsed_time} seconds, duration = {self.duration}, last_water_usage = {self.last_water_usage}")
 
 class HomgarHubDevice(HomgarDevice):
     """
@@ -391,7 +392,13 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
         17 means the valve was manually opened using the physical button ont he device
         1722206816 is when it was opened
         480 is the number of seconds it was programmed to stay open
+
+        Format:
+        mode|last_water_usage|unknown|end_timestamp|duration|unknown
+
         """
+
+        print(f"Raw state: {s}")
         
         valve_zones = s.split('|')
         valve_ports = []
@@ -403,11 +410,12 @@ class RainPoint2ZoneTimer(HomgarSubDevice):
             
             # Extract the known values
             active = values[0] in ['33', '34', '17']
+            last_water_usage = float(values[1]) / 10
             end_timestamp = int(values[3])
             duration = int(values[4])
             id = f"{self.did}-{port_number}"
 
-            valve_port = HomgarValvePort(id = id, port_number = port_number, active = active, end_timestamp = end_timestamp, duration = duration)
+            valve_port = HomgarValvePort(id = id, port_number = port_number, active = active, last_water_usage = last_water_usage, end_timestamp = end_timestamp, duration = duration)
             valve_ports.append(valve_port)
 
         self.valve_ports = valve_ports
